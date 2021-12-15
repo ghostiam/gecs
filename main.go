@@ -22,21 +22,12 @@ func main() {
 	w.AddSystem(&RenderConsoleSystem{})
 	w.AddSystem(ecs.NewOneFrame((*InputEvent)(nil)))
 
-	{
+	for i := 0; i < 5; i++ {
 		playerEntity := w.NewEntity()
 		playerEntity.Get(&Player{})
-		playerEntity.Get(&Position{})
+		playerEntity.Get(&Position{Y: i * 2})
 		playerEntity.Get(&RenderConsole{Char: 'w'})
 	}
-
-	// go func() {
-	// 	for {
-	// 		time.Sleep(500 * time.Millisecond)
-	// 		w.NewEntity().Get(&InputEvent{Horizontal: 1})
-	// 		time.Sleep(500 * time.Millisecond)
-	// 		w.NewEntity().Get(&InputEvent{Vertical: -1})
-	// 	}
-	// }()
 
 	w.Run(30)
 }
@@ -59,7 +50,7 @@ func (s *InputConsoleSystem) GetFilters() []ecs.SystemFilter {
 	return nil
 }
 
-func (s *InputConsoleSystem) Update(dt float32, filtered [][]ecs.Entity) {
+func (s *InputConsoleSystem) Update(_ float32, _ [][]ecs.Entity) {
 	event := InputEvent{}
 
 	select {
@@ -111,18 +102,20 @@ func (s *MovePlayerSystem) GetFilters() []ecs.SystemFilter {
 	}
 }
 
-func (s *MovePlayerSystem) Update(dt float32, filtered [][]ecs.Entity) {
+func (s *MovePlayerSystem) Update(_ float32, filtered [][]ecs.Entity) {
 	input := filtered[0]
-	player := filtered[1]
+	players := filtered[1]
 
 	if len(input) == 0 {
 		return
 	}
 
 	ie := input[0].Get((*InputEvent)(nil)).(*InputEvent)
-	pos := player[0].Get((*Position)(nil)).(*Position)
-	pos.X += ie.Horizontal
-	pos.Y -= ie.Vertical
+	for _, p := range players {
+		pos := p.Get((*Position)(nil)).(*Position)
+		pos.X += ie.Horizontal
+		pos.Y -= ie.Vertical
+	}
 }
 
 type RenderConsoleSystem struct {
@@ -136,7 +129,7 @@ func (s *RenderConsoleSystem) GetFilters() []ecs.SystemFilter {
 	}
 }
 
-func (s *RenderConsoleSystem) Update(dt float32, filtered [][]ecs.Entity) {
+func (s *RenderConsoleSystem) Update(_ float32, filtered [][]ecs.Entity) {
 	if len(filtered[1]) == 0 && s.notFirstRun {
 		return
 	}
@@ -148,7 +141,7 @@ func (s *RenderConsoleSystem) Update(dt float32, filtered [][]ecs.Entity) {
 		pos := e.Get((*Position)(nil)).(*Position)
 		char := e.Get((*RenderConsole)(nil)).(*RenderConsole).Char
 
-		// fmt.Println(pos.X, pos.Y, string(char))
+		fmt.Println(pos.X, pos.Y, string(char))
 		term.SetCell(pos.X, pos.Y, char, term.ColorDefault, term.ColorGreen)
 
 		for i, c := range fmt.Sprintf("(%d;%d)", pos.X, pos.Y) {
