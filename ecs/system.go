@@ -38,7 +38,17 @@ func (w *world) systemCacheDeleteEntityFromAllSystems(e Entity) {
 }
 
 func (w *world) systemCacheDeleteEntityFromSystem(e Entity, systemType reflect.Type, fid filterIndex) {
-	delete(w.systemFiltersEntityCache[systemType][fid], e)
+	var deleteIdx = -1
+	for i, ee := range w.systemFiltersEntityCache[systemType][fid] {
+		if ee.ID() == e.ID() {
+			deleteIdx = i
+			break
+		}
+	}
+
+	if deleteIdx > -1 {
+		w.systemFiltersEntityCache[systemType][fid] = append(w.systemFiltersEntityCache[systemType][fid][:deleteIdx], w.systemFiltersEntityCache[systemType][fid][deleteIdx+1:]...)
+	}
 
 	if len(w.systemFiltersEntityCache[systemType][fid]) == 0 {
 		delete(w.systemFiltersEntityCache[systemType], fid)
@@ -97,13 +107,10 @@ func (w *world) systemCacheRebuildByEntity(e Entity) {
 
 			if hasComponentCount(f.Include) == len(f.Include) {
 				if w.systemFiltersEntityCache[st] == nil {
-					w.systemFiltersEntityCache[st] = make(map[filterIndex]map[Entity]struct{})
-				}
-				if w.systemFiltersEntityCache[st][ffid] == nil {
-					w.systemFiltersEntityCache[st][ffid] = make(map[Entity]struct{})
+					w.systemFiltersEntityCache[st] = make(map[filterIndex][]Entity)
 				}
 
-				w.systemFiltersEntityCache[st][ffid][e] = struct{}{}
+				w.systemFiltersEntityCache[st][ffid] = append(w.systemFiltersEntityCache[st][ffid], e)
 				continue
 			}
 
@@ -151,13 +158,10 @@ func (w *world) systemEntityCacheRebuildBySystem(systemType reflect.Type) {
 
 				// Append if system includes count  == entity component count
 				if w.systemFiltersEntityCache[systemType] == nil {
-					w.systemFiltersEntityCache[systemType] = make(map[filterIndex]map[Entity]struct{})
-				}
-				if w.systemFiltersEntityCache[systemType][ffid] == nil {
-					w.systemFiltersEntityCache[systemType][ffid] = make(map[Entity]struct{})
+					w.systemFiltersEntityCache[systemType] = make(map[filterIndex][]Entity)
 				}
 
-				w.systemFiltersEntityCache[systemType][ffid][e] = struct{}{}
+				w.systemFiltersEntityCache[systemType][ffid] = append(w.systemFiltersEntityCache[systemType][ffid], e)
 			}
 		}
 	}

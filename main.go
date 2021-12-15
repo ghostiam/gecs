@@ -38,7 +38,7 @@ func main() {
 	// 	}
 	// }()
 
-	w.Run(10)
+	w.Run(600)
 }
 
 func NewInputConsoleSystem(w ecs.World) *InputConsoleSystem {

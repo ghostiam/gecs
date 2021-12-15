@@ -16,7 +16,8 @@ func TestSystem_Filter(t *testing.T) {
 
 	t.Run("First nil check", func(t *testing.T) {
 		w.Update(1)
-		require.Nil(t, s1.Filtered)
+		require.Len(t, s1.Filtered, 1)
+		require.Len(t, s1.Filtered[0], 0)
 	})
 
 	// Add entities
@@ -37,7 +38,8 @@ func TestSystem_Filter(t *testing.T) {
 		e1.Replace(&Component2{Text: "Ops"})
 
 		w.Update(1)
-		require.Len(t, s1.Filtered, 0)
+		require.Len(t, s1.Filtered, 1)
+		require.Len(t, s1.Filtered[0], 0)
 	})
 
 	t.Run("After delete exclude component from entity 1", func(t *testing.T) {

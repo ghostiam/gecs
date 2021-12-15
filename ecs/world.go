@@ -26,7 +26,7 @@ func NewWorld() World {
 
 		systems:                  nil,
 		systemFilters:            make(map[systemType][]systemFilterTypes),
-		systemFiltersEntityCache: make(map[systemType]map[filterIndex]map[Entity]struct{}),
+		systemFiltersEntityCache: make(map[systemType]map[filterIndex][]Entity),
 	}
 }
 
@@ -44,7 +44,7 @@ type world struct {
 
 	systems                  []System
 	systemFilters            map[systemType][]systemFilterTypes
-	systemFiltersEntityCache map[systemType]map[filterIndex]map[Entity]struct{}
+	systemFiltersEntityCache map[systemType]map[filterIndex][]Entity
 }
 
 func (w *world) NewEntity() Entity {
@@ -118,11 +118,9 @@ func (w *world) Update(dt float32) {
 
 		var filteredEntities [][]Entity
 		for fid := range w.systemFilters[st] {
-			entities := make([]Entity, 0)
+			var entities []Entity
 			if len(w.systemFiltersEntityCache[st]) > 0 {
-				for e := range w.systemFiltersEntityCache[st][filterIndex(fid)] {
-					entities = append(entities, e)
-				}
+				entities = w.systemFiltersEntityCache[st][filterIndex(fid)]
 			}
 			filteredEntities = append(filteredEntities, entities)
 		}
