@@ -19,8 +19,8 @@ type System interface {
 	// Update вызывается при каждом тике.
 	// dt - время в секундах, прошедшее с предыдущего тика.
 	// filtered - отфильтрованный список entity по фильтрам из метода GetFilters.
-	// filtered - [FilterIndex][EntityIndex]EntityComponent
-	Update(dt float32, filtered [][]EntityComponent)
+	// filtered - [FilterIndex][EntityIndex]Entity
+	Update(dt float32, filtered [][]Entity)
 }
 
 // systemFilterTypes includes Component types
@@ -37,7 +37,7 @@ func (w *world) systemCacheDeleteEntityFromAllSystems(e Entity) {
 	}
 }
 
-func (w *world) systemCacheDeleteEntityFromSystem(e Entity, systemType reflect.Type, fid int) {
+func (w *world) systemCacheDeleteEntityFromSystem(e Entity, systemType reflect.Type, fid filterIndex) {
 	delete(w.systemFiltersEntityCache[systemType][fid], e.ID())
 
 	if len(w.systemFiltersEntityCache[systemType][fid]) == 0 {
@@ -88,24 +88,26 @@ func (w *world) systemCacheRebuildByEntity(e Entity) {
 		}
 
 		for fid, f := range filter {
+			ffid := filterIndex(fid)
+
 			if hasComponentCount(f.Exclude) > 0 {
-				w.systemCacheDeleteEntityFromSystem(e, st, fid)
+				w.systemCacheDeleteEntityFromSystem(e, st, ffid)
 				continue
 			}
 
 			if hasComponentCount(f.Include) == len(f.Include) {
 				if w.systemFiltersEntityCache[st] == nil {
-					w.systemFiltersEntityCache[st] = make(map[int]map[EntityID]struct{})
+					w.systemFiltersEntityCache[st] = make(map[filterIndex]map[EntityID]struct{})
 				}
-				if w.systemFiltersEntityCache[st][fid] == nil {
-					w.systemFiltersEntityCache[st][fid] = make(map[EntityID]struct{})
+				if w.systemFiltersEntityCache[st][ffid] == nil {
+					w.systemFiltersEntityCache[st][ffid] = make(map[EntityID]struct{})
 				}
 
-				w.systemFiltersEntityCache[st][fid][e.ID()] = struct{}{}
+				w.systemFiltersEntityCache[st][ffid][e.ID()] = struct{}{}
 				continue
 			}
 
-			w.systemCacheDeleteEntityFromSystem(e, st, fid)
+			w.systemCacheDeleteEntityFromSystem(e, st, ffid)
 		}
 	}
 }
@@ -117,6 +119,8 @@ func (w *world) systemEntityCacheRebuildBySystem(systemType reflect.Type) {
 	}
 
 	for fid, f := range filter {
+		ffid := filterIndex(fid)
+
 		excludeIDs := make(map[EntityID]struct{})
 		for _, ex := range f.Exclude {
 			if len(w.components[ex]) == 0 {
@@ -147,13 +151,13 @@ func (w *world) systemEntityCacheRebuildBySystem(systemType reflect.Type) {
 
 				// Append if system includes count  == entity component count
 				if w.systemFiltersEntityCache[systemType] == nil {
-					w.systemFiltersEntityCache[systemType] = make(map[int]map[EntityID]struct{})
+					w.systemFiltersEntityCache[systemType] = make(map[filterIndex]map[EntityID]struct{})
 				}
-				if w.systemFiltersEntityCache[systemType][fid] == nil {
-					w.systemFiltersEntityCache[systemType][fid] = make(map[EntityID]struct{})
+				if w.systemFiltersEntityCache[systemType][ffid] == nil {
+					w.systemFiltersEntityCache[systemType][ffid] = make(map[EntityID]struct{})
 				}
 
-				w.systemFiltersEntityCache[systemType][fid][eid] = struct{}{}
+				w.systemFiltersEntityCache[systemType][ffid][eid] = struct{}{}
 			}
 		}
 	}

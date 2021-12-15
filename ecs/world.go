@@ -5,7 +5,7 @@ import (
 )
 
 type World interface {
-	NewEntity() EntityComponent
+	NewEntity() Entity
 	DestroyEntity(e Entity)
 
 	AddSystem(s System)
@@ -22,30 +22,28 @@ func NewWorld() World {
 
 		systems:                  nil,
 		systemFilters:            make(map[systemType][]systemFilterTypes),
-		systemFiltersEntityCache: make(map[systemType]map[int]map[EntityID]struct{}),
+		systemFiltersEntityCache: make(map[systemType]map[filterIndex]map[EntityID]struct{}),
 	}
 }
 
 // Type aliases for better readability.
 type componentType reflect.Type
 type systemType reflect.Type
+type filterIndex int
 
 type world struct {
 	entityID EntityID
 	entities []Entity
 
-	// map[ComponentType]map[EntityID]Component
 	components map[componentType]map[EntityID]Component
-	// oneFrameComponents map[reflect.Type]map[uint64]Component // TODO
+	// oneFrameComponents map[componentType]map[EntityID]Component // TODO
 
-	systems []System
-	// map[SystemType][]Filters
-	systemFilters map[systemType][]systemFilterTypes
-	// map[SystemType]map[FilterIndex]map[EntityID]struct{}
-	systemFiltersEntityCache map[systemType]map[int]map[EntityID]struct{}
+	systems                  []System
+	systemFilters            map[systemType][]systemFilterTypes
+	systemFiltersEntityCache map[systemType]map[filterIndex]map[EntityID]struct{}
 }
 
-func (w *world) NewEntity() EntityComponent {
+func (w *world) NewEntity() Entity {
 	w.entityID++ // TODO atomic or mutex
 	e := &entity{w: w, id: w.entityID}
 
@@ -130,11 +128,11 @@ func (w *world) Update(dt float32) {
 	for _, s := range w.systems {
 		st := reflect.TypeOf(s)
 
-		var filteredEntities [][]EntityComponent
+		var filteredEntities [][]Entity
 		if len(w.systemFiltersEntityCache[st]) > 0 {
 			for fid := range w.systemFilters[st] {
-				entities := make([]EntityComponent, 0)
-				for eid := range w.systemFiltersEntityCache[st][fid] {
+				entities := make([]Entity, 0)
+				for eid := range w.systemFiltersEntityCache[st][filterIndex(fid)] {
 					entities = append(entities, &entity{w: w, id: eid})
 				}
 

@@ -167,7 +167,7 @@ func TestSystem_Filter(t *testing.T) {
 var _ System = (*Component1System)(nil)
 
 type Component1System struct {
-	Filtered [][]EntityComponent
+	Filtered [][]Entity
 }
 
 func (s *Component1System) GetFilters() []SystemFilter {
@@ -176,7 +176,7 @@ func (s *Component1System) GetFilters() []SystemFilter {
 	}
 }
 
-func (s *Component1System) Update(dt float32, filtered [][]EntityComponent) {
+func (s *Component1System) Update(dt float32, filtered [][]Entity) {
 	s.Filtered = filtered
 
 	println("Component1System")
@@ -191,7 +191,7 @@ func (s *Component1System) Update(dt float32, filtered [][]EntityComponent) {
 var _ System = (*Component2System)(nil)
 
 type Component2System struct {
-	Filtered [][]EntityComponent
+	Filtered [][]Entity
 }
 
 func (s *Component2System) GetFilters() []SystemFilter {
@@ -200,7 +200,7 @@ func (s *Component2System) GetFilters() []SystemFilter {
 	}
 }
 
-func (s *Component2System) Update(dt float32, filtered [][]EntityComponent) {
+func (s *Component2System) Update(dt float32, filtered [][]Entity) {
 	s.Filtered = filtered
 
 	println("Component2System")
@@ -215,7 +215,7 @@ func (s *Component2System) Update(dt float32, filtered [][]EntityComponent) {
 var _ System = (*Component1And2System)(nil)
 
 type Component1And2System struct {
-	Filtered [][]EntityComponent
+	Filtered [][]Entity
 }
 
 func (s *Component1And2System) GetFilters() []SystemFilter {
@@ -224,7 +224,7 @@ func (s *Component1And2System) GetFilters() []SystemFilter {
 	}
 }
 
-func (s *Component1And2System) Update(dt float32, filtered [][]EntityComponent) {
+func (s *Component1And2System) Update(dt float32, filtered [][]Entity) {
 	s.Filtered = filtered
 
 	println("Component1And2System")
@@ -239,7 +239,7 @@ func (s *Component1And2System) Update(dt float32, filtered [][]EntityComponent) 
 var _ System = (*Component1Or2System)(nil)
 
 type Component1Or2System struct {
-	Filtered [][]EntityComponent
+	Filtered [][]Entity
 }
 
 func (s *Component1Or2System) GetFilters() []SystemFilter {
@@ -250,7 +250,7 @@ func (s *Component1Or2System) GetFilters() []SystemFilter {
 	}
 }
 
-func (s *Component1Or2System) Update(dt float32, filtered [][]EntityComponent) {
+func (s *Component1Or2System) Update(dt float32, filtered [][]Entity) {
 	s.Filtered = filtered
 
 	println("Component1Or2System")

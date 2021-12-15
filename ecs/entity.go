@@ -6,14 +6,10 @@ import (
 
 type EntityID uint64
 
-type Entity interface {
-	ID() EntityID
-}
-
 type Component interface{}
 
-type EntityComponent interface {
-	Entity
+type Entity interface {
+	ID() EntityID
 
 	// Get получает существующий компонент с типом переданного компонента.
 	// Если компонента не существует и передан не nil, компонент будет добавлен к entity.
