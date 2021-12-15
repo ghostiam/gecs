@@ -110,7 +110,7 @@ func (w *world) systemCacheRebuildByEntity(e Entity) {
 					w.systemFiltersEntityCache[st] = make(map[filterIndex][]Entity)
 				}
 
-				w.systemFiltersEntityCache[st][ffid] = append(w.systemFiltersEntityCache[st][ffid], e)
+				w.systemFiltersEntityCache[st][ffid] = appendIfMissing(w.systemFiltersEntityCache[st][ffid], e)
 				continue
 			}
 
@@ -161,8 +161,17 @@ func (w *world) systemEntityCacheRebuildBySystem(systemType reflect.Type) {
 					w.systemFiltersEntityCache[systemType] = make(map[filterIndex][]Entity)
 				}
 
-				w.systemFiltersEntityCache[systemType][ffid] = append(w.systemFiltersEntityCache[systemType][ffid], e)
+				w.systemFiltersEntityCache[systemType][ffid] = appendIfMissing(w.systemFiltersEntityCache[systemType][ffid], e)
 			}
 		}
 	}
+}
+
+func appendIfMissing(slice []Entity, i Entity) []Entity {
+	for _, ele := range slice {
+		if ele == i {
+			return slice
+		}
+	}
+	return append(slice, i)
 }
