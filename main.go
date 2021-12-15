@@ -38,7 +38,7 @@ func main() {
 	// 	}
 	// }()
 
-	w.Run(600)
+	w.Run(30)
 }
 
 func NewInputConsoleSystem(w ecs.World) *InputConsoleSystem {
@@ -64,6 +64,7 @@ func (s *InputConsoleSystem) Update(dt float32, filtered [][]ecs.Entity) {
 
 	select {
 	case key := <-s.lastPressed:
+		// nolint: exhaustive
 		switch key {
 		case term.KeyCtrlC, term.KeyEsc:
 			s.w.Stop()
@@ -90,6 +91,7 @@ func (s *InputConsoleSystem) Update(dt float32, filtered [][]ecs.Entity) {
 
 func (s *InputConsoleSystem) readConsoleInput() {
 	for {
+		// nolint: exhaustive
 		switch ev := term.PollEvent(); ev.Type {
 		case term.EventKey:
 			s.lastPressed <- ev.Key
@@ -104,8 +106,8 @@ type MovePlayerSystem struct {
 
 func (s *MovePlayerSystem) GetFilters() []ecs.SystemFilter {
 	return []ecs.SystemFilter{
-		{[]ecs.Component{(*InputEvent)(nil)}, nil},
-		{[]ecs.Component{(*Player)(nil), (*Position)(nil)}, nil},
+		{Include: []ecs.Component{(*InputEvent)(nil)}},
+		{Include: []ecs.Component{(*Player)(nil), (*Position)(nil)}},
 	}
 }
 
@@ -117,9 +119,6 @@ func (s *MovePlayerSystem) Update(dt float32, filtered [][]ecs.Entity) {
 		return
 	}
 
-	fmt.Println(input)
-	fmt.Println(player)
-
 	ie := input[0].Get((*InputEvent)(nil)).(*InputEvent)
 	pos := player[0].Get((*Position)(nil)).(*Position)
 	pos.X += ie.Horizontal
@@ -127,25 +126,37 @@ func (s *MovePlayerSystem) Update(dt float32, filtered [][]ecs.Entity) {
 }
 
 type RenderConsoleSystem struct {
+	notFirstRun bool
 }
 
 func (s *RenderConsoleSystem) GetFilters() []ecs.SystemFilter {
 	return []ecs.SystemFilter{
-		{[]ecs.Component{(*Position)(nil), (*RenderConsole)(nil)}, nil},
+		{Include: []ecs.Component{(*Position)(nil), (*RenderConsole)(nil)}},
+		{Include: []ecs.Component{(*InputEvent)(nil)}},
 	}
 }
 
 func (s *RenderConsoleSystem) Update(dt float32, filtered [][]ecs.Entity) {
-	term.Sync()
-	term.Clear(term.ColorDefault, term.ColorDefault)
+	if len(filtered[1]) == 0 && s.notFirstRun {
+		return
+	}
+	s.notFirstRun = true
+
+	_ = term.Clear(term.ColorDefault, term.ColorDefault)
 
 	for _, e := range filtered[0] {
 		pos := e.Get((*Position)(nil)).(*Position)
 		char := e.Get((*RenderConsole)(nil)).(*RenderConsole).Char
 
-		fmt.Println(pos.X, pos.Y, string(char))
+		// fmt.Println(pos.X, pos.Y, string(char))
 		term.SetCell(pos.X, pos.Y, char, term.ColorDefault, term.ColorGreen)
+
+		for i, c := range fmt.Sprintf("(%d;%d)", pos.X, pos.Y) {
+			term.SetCell(pos.X+i+1, pos.Y, c, term.ColorDefault, term.ColorGreen)
+		}
 	}
+
+	_ = term.Sync()
 }
 
 type InputEvent struct {
