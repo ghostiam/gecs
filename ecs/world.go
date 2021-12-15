@@ -2,6 +2,7 @@ package ecs
 
 import (
 	"reflect"
+	"time"
 )
 
 type World interface {
@@ -11,6 +12,10 @@ type World interface {
 	RemoveSystem(s System)
 
 	Update(dt float32)
+
+	// Run вызывает метод Update с частотой TPS (Tick per second). Блокирующий метод!
+	Run(tps uint)
+	Stop()
 }
 
 func NewWorld() World {
@@ -31,8 +36,9 @@ type systemType reflect.Type
 type filterIndex int
 
 type world struct {
-	entityID uint64
-	entities []Entity
+	entityID  uint64
+	entities  []Entity
+	isRunning bool
 
 	components map[componentType]map[Entity]Component
 
@@ -111,17 +117,33 @@ func (w *world) Update(dt float32) {
 		st := reflect.TypeOf(s)
 
 		var filteredEntities [][]Entity
-		if len(w.systemFiltersEntityCache[st]) > 0 {
-			for fid := range w.systemFilters[st] {
-				entities := make([]Entity, 0)
+		for fid := range w.systemFilters[st] {
+			entities := make([]Entity, 0)
+			if len(w.systemFiltersEntityCache[st]) > 0 {
 				for e := range w.systemFiltersEntityCache[st][filterIndex(fid)] {
 					entities = append(entities, e)
 				}
-
-				filteredEntities = append(filteredEntities, entities)
 			}
+			filteredEntities = append(filteredEntities, entities)
 		}
 
 		s.Update(dt, filteredEntities)
 	}
+}
+
+func (w *world) Run(fps uint) {
+	w.isRunning = true
+
+	last := time.Now()
+	for w.isRunning {
+		dt := time.Since(last)
+		w.Update(float32(dt.Seconds()))
+		last = time.Now()
+
+		time.Sleep(time.Duration(float64(time.Second) / float64(fps)))
+	}
+}
+
+func (w *world) Stop() {
+	w.isRunning = false
 }

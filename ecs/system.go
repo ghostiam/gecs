@@ -84,7 +84,7 @@ func (w *world) systemCacheRebuildByEntity(e Entity) {
 
 		filter := w.systemFilters[st]
 		if len(filter) == 0 {
-			return
+			continue
 		}
 
 		for fid, f := range filter {
