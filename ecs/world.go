@@ -18,29 +18,31 @@ func NewWorld() World {
 	return &world{
 		entityID:   0,
 		entities:   nil,
-		components: make(map[reflect.Type]map[uint64]Component),
+		components: make(map[componentType]map[EntityID]Component),
 
-		systems:           nil,
-		systemEntityCache: make(map[reflect.Type]map[uint64]struct{}),
-		systemIn:          make(map[reflect.Type][]reflect.Type),
-		systemEx:          make(map[reflect.Type][]reflect.Type),
+		systems:                  nil,
+		systemFilters:            make(map[systemType][]systemFilterTypes),
+		systemFiltersEntityCache: make(map[systemType]map[int]map[EntityID]struct{}),
 	}
 }
 
+// Type aliases for better readability.
+type componentType reflect.Type
+type systemType reflect.Type
+
 type world struct {
-	entityID uint64
+	entityID EntityID
 	entities []Entity
 
 	// map[ComponentType]map[EntityID]Component
-	components map[reflect.Type]map[uint64]Component
+	components map[componentType]map[EntityID]Component
 	// oneFrameComponents map[reflect.Type]map[uint64]Component // TODO
 
 	systems []System
-	// map[SystemType]map[EntityID]struct{}
-	systemEntityCache map[reflect.Type]map[uint64]struct{}
-	// map[SystemType][]ComponentType
-	systemIn map[reflect.Type][]reflect.Type
-	systemEx map[reflect.Type][]reflect.Type
+	// map[SystemType][]Filters
+	systemFilters map[systemType][]systemFilterTypes
+	// map[SystemType]map[FilterIndex]map[EntityID]struct{}
+	systemFiltersEntityCache map[systemType]map[int]map[EntityID]struct{}
 }
 
 func (w *world) NewEntity() EntityComponent {
@@ -82,12 +84,19 @@ func (w *world) AddSystem(s System) {
 
 	st := reflect.TypeOf(s)
 
-	in, ex := s.GetFilter()
-	for _, v := range in {
-		w.systemIn[st] = append(w.systemIn[st], reflect.TypeOf(v))
-	}
-	for _, v := range ex {
-		w.systemEx[st] = append(w.systemEx[st], reflect.TypeOf(v))
+	for _, f := range s.GetFilters() {
+		var in, ex []reflect.Type
+		for _, v := range f.Include {
+			in = append(in, reflect.TypeOf(v))
+		}
+		for _, v := range f.Exclude {
+			ex = append(ex, reflect.TypeOf(v))
+		}
+
+		w.systemFilters[st] = append(w.systemFilters[st], systemFilterTypes{
+			Include: in,
+			Exclude: ex,
+		})
 	}
 
 	if len(w.components) == 0 {
@@ -113,23 +122,26 @@ func (w *world) RemoveSystem(s System) {
 		w.systems = append(w.systems[:deleteIdx], w.systems[deleteIdx+1:]...)
 	}
 
-	delete(w.systemEntityCache, st)
-	delete(w.systemIn, st)
-	delete(w.systemEx, st)
+	delete(w.systemFiltersEntityCache, st)
+	delete(w.systemFilters, st)
 }
 
 func (w *world) Update(dt float32) {
 	for _, s := range w.systems {
 		st := reflect.TypeOf(s)
 
-		var entities []EntityComponent
-		if len(w.systemEntityCache[st]) > 0 {
-			entities = make([]EntityComponent, 0, len(w.systemEntityCache[st]))
-			for eid := range w.systemEntityCache[st] {
-				entities = append(entities, &entity{w: w, id: eid})
+		var filteredEntities [][]EntityComponent
+		if len(w.systemFiltersEntityCache[st]) > 0 {
+			for fid := range w.systemFilters[st] {
+				entities := make([]EntityComponent, 0)
+				for eid := range w.systemFiltersEntityCache[st][fid] {
+					entities = append(entities, &entity{w: w, id: eid})
+				}
+
+				filteredEntities = append(filteredEntities, entities)
 			}
 		}
 
-		s.Update(dt, entities)
+		s.Update(dt, filteredEntities)
 	}
 }

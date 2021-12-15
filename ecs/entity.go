@@ -4,11 +4,13 @@ import (
 	"reflect"
 )
 
-type Component interface{}
+type EntityID uint64
 
 type Entity interface {
-	ID() uint64
+	ID() EntityID
 }
+
+type Component interface{}
 
 type EntityComponent interface {
 	Entity
@@ -30,10 +32,10 @@ type EntityComponent interface {
 
 type entity struct {
 	w  *world
-	id uint64
+	id EntityID
 }
 
-func (e *entity) ID() uint64 {
+func (e *entity) ID() EntityID {
 	return e.id
 }
 
@@ -73,7 +75,7 @@ func (e *entity) getOrReplace(c Component, replace bool) Component {
 	ct := reflect.TypeOf(c)
 	cs := e.w.components[ct]
 	if cs == nil {
-		cs = make(map[uint64]Component)
+		cs = make(map[EntityID]Component)
 		e.w.components[ct] = cs
 	}
 
