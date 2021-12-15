@@ -124,14 +124,21 @@ func TestComponent_Delete(t *testing.T) {
 	e := w.NewEntity()
 	e.Replace(&Component1{Num: 42})
 	e.Replace(&Component2{Text: "Hello world"})
+	require.False(t, e.(*entity).destroyed)
 
 	e.Delete((*Component1)(nil))
 	require.Nil(t, e.Get((*Component1)(nil)))
 	require.NotNil(t, e.Get((*Component2)(nil)))
+	require.False(t, e.(*entity).destroyed)
 
 	e.Delete((*Component2)(nil))
 	require.Nil(t, e.Get((*Component1)(nil)))
 	require.Nil(t, e.Get((*Component2)(nil)))
+	require.True(t, e.(*entity).destroyed)
+
+	e.Replace(&Component1{Num: 123})
+	require.NotNil(t, e.Get((*Component1)(nil)))
+	require.False(t, e.(*entity).destroyed)
 }
 
 func TestComponent_Components(t *testing.T) {

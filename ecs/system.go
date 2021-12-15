@@ -38,7 +38,7 @@ func (w *world) systemCacheDeleteEntityFromAllSystems(e Entity) {
 }
 
 func (w *world) systemCacheDeleteEntityFromSystem(e Entity, systemType reflect.Type, fid filterIndex) {
-	delete(w.systemFiltersEntityCache[systemType][fid], e.ID())
+	delete(w.systemFiltersEntityCache[systemType][fid], e)
 
 	if len(w.systemFiltersEntityCache[systemType][fid]) == 0 {
 		delete(w.systemFiltersEntityCache[systemType], fid)
@@ -52,7 +52,7 @@ func (w *world) systemCacheDeleteEntityFromSystem(e Entity, systemType reflect.T
 func (w *world) systemCacheRebuildByEntity(e Entity) {
 	var componentTypes []reflect.Type
 	for ct, me := range w.components {
-		_, ok := me[e.ID()]
+		_, ok := me[e]
 		if !ok {
 			continue
 		}
@@ -97,13 +97,13 @@ func (w *world) systemCacheRebuildByEntity(e Entity) {
 
 			if hasComponentCount(f.Include) == len(f.Include) {
 				if w.systemFiltersEntityCache[st] == nil {
-					w.systemFiltersEntityCache[st] = make(map[filterIndex]map[EntityID]struct{})
+					w.systemFiltersEntityCache[st] = make(map[filterIndex]map[Entity]struct{})
 				}
 				if w.systemFiltersEntityCache[st][ffid] == nil {
-					w.systemFiltersEntityCache[st][ffid] = make(map[EntityID]struct{})
+					w.systemFiltersEntityCache[st][ffid] = make(map[Entity]struct{})
 				}
 
-				w.systemFiltersEntityCache[st][ffid][e.ID()] = struct{}{}
+				w.systemFiltersEntityCache[st][ffid][e] = struct{}{}
 				continue
 			}
 
@@ -121,43 +121,43 @@ func (w *world) systemEntityCacheRebuildBySystem(systemType reflect.Type) {
 	for fid, f := range filter {
 		ffid := filterIndex(fid)
 
-		excludeIDs := make(map[EntityID]struct{})
+		excludeIDs := make(map[uint64]struct{}) // map[EntityID]struct{}
 		for _, ex := range f.Exclude {
 			if len(w.components[ex]) == 0 {
 				continue
 			}
 
-			for eid := range w.components[ex] {
-				excludeIDs[eid] = struct{}{}
+			for e := range w.components[ex] {
+				excludeIDs[e.ID()] = struct{}{}
 			}
 		}
 
-		includeIDs := make(map[EntityID]int) // map[EntityID]count
+		includeIDs := make(map[uint64]int) // map[EntityID]count
 		for _, in := range f.Include {
 			if len(w.components[in]) == 0 {
 				return // If there is not at least one component from include, there is no point in further checking.
 			}
 
-			for eid := range w.components[in] {
-				if _, exist := excludeIDs[eid]; exist {
+			for e := range w.components[in] {
+				if _, exist := excludeIDs[e.ID()]; exist {
 					continue
 				}
 
-				includeIDs[eid]++
+				includeIDs[e.ID()]++
 
-				if includeIDs[eid] != len(f.Include) {
+				if includeIDs[e.ID()] != len(f.Include) {
 					continue
 				}
 
 				// Append if system includes count  == entity component count
 				if w.systemFiltersEntityCache[systemType] == nil {
-					w.systemFiltersEntityCache[systemType] = make(map[filterIndex]map[EntityID]struct{})
+					w.systemFiltersEntityCache[systemType] = make(map[filterIndex]map[Entity]struct{})
 				}
 				if w.systemFiltersEntityCache[systemType][ffid] == nil {
-					w.systemFiltersEntityCache[systemType][ffid] = make(map[EntityID]struct{})
+					w.systemFiltersEntityCache[systemType][ffid] = make(map[Entity]struct{})
 				}
 
-				w.systemFiltersEntityCache[systemType][ffid][eid] = struct{}{}
+				w.systemFiltersEntityCache[systemType][ffid][e] = struct{}{}
 			}
 		}
 	}

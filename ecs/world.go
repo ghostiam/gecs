@@ -6,7 +6,6 @@ import (
 
 type World interface {
 	NewEntity() Entity
-	DestroyEntity(e Entity)
 
 	AddSystem(s System)
 	RemoveSystem(s System)
@@ -18,11 +17,11 @@ func NewWorld() World {
 	return &world{
 		entityID:   0,
 		entities:   nil,
-		components: make(map[componentType]map[EntityID]Component),
+		components: make(map[componentType]map[Entity]Component),
 
 		systems:                  nil,
 		systemFilters:            make(map[systemType][]systemFilterTypes),
-		systemFiltersEntityCache: make(map[systemType]map[filterIndex]map[EntityID]struct{}),
+		systemFiltersEntityCache: make(map[systemType]map[filterIndex]map[Entity]struct{}),
 	}
 }
 
@@ -32,14 +31,14 @@ type systemType reflect.Type
 type filterIndex int
 
 type world struct {
-	entityID EntityID
+	entityID uint64
 	entities []Entity
 
-	components map[componentType]map[EntityID]Component
+	components map[componentType]map[Entity]Component
 
 	systems                  []System
 	systemFilters            map[systemType][]systemFilterTypes
-	systemFiltersEntityCache map[systemType]map[filterIndex]map[EntityID]struct{}
+	systemFiltersEntityCache map[systemType]map[filterIndex]map[Entity]struct{}
 }
 
 func (w *world) NewEntity() Entity {
@@ -48,30 +47,6 @@ func (w *world) NewEntity() Entity {
 
 	w.entities = append(w.entities, e)
 	return e
-}
-
-func (w *world) DestroyEntity(e Entity) {
-	var deleteIdx = -1
-	for i, ee := range w.entities {
-		if ee.ID() == e.ID() {
-			deleteIdx = i
-			break
-		}
-	}
-
-	if deleteIdx > -1 {
-		w.entities = append(w.entities[:deleteIdx], w.entities[deleteIdx+1:]...)
-	}
-
-	for ct, m := range w.components {
-		delete(m, e.ID())
-
-		if len(w.components[ct]) == 0 {
-			delete(w.components, ct)
-		}
-	}
-
-	w.systemCacheDeleteEntityFromAllSystems(e)
 }
 
 func (w *world) Entities() []Entity {
@@ -139,8 +114,8 @@ func (w *world) Update(dt float32) {
 		if len(w.systemFiltersEntityCache[st]) > 0 {
 			for fid := range w.systemFilters[st] {
 				entities := make([]Entity, 0)
-				for eid := range w.systemFiltersEntityCache[st][filterIndex(fid)] {
-					entities = append(entities, &entity{w: w, id: eid})
+				for e := range w.systemFiltersEntityCache[st][filterIndex(fid)] {
+					entities = append(entities, e)
 				}
 
 				filteredEntities = append(filteredEntities, entities)

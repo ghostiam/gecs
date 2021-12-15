@@ -4,12 +4,14 @@ import (
 	"reflect"
 )
 
-type EntityID uint64
-
 type Component interface{}
 
 type Entity interface {
-	ID() EntityID
+	ID() uint64
+
+	// Destroy удаляет все компоненты и удаляет entity из мира.
+	// В случае, если кто-то держит ссылку на entity и добавит новый компонент, entity восстановится.
+	Destroy()
 
 	// Get получает существующий компонент с типом переданного компонента.
 	// Если компонента не существует и передан не nil, компонент будет добавлен к entity.
@@ -30,12 +32,40 @@ type Entity interface {
 }
 
 type entity struct {
-	w  *world
-	id EntityID
+	w              *world
+	id             uint64
+	componentCount uint64
+	destroyed      bool
 }
 
-func (e *entity) ID() EntityID {
+func (e *entity) ID() uint64 {
 	return e.id
+}
+
+func (e *entity) Destroy() {
+	e.destroyed = true
+
+	var deleteIdx = -1
+	for i, ee := range e.w.entities {
+		if ee.ID() == e.ID() {
+			deleteIdx = i
+			break
+		}
+	}
+
+	if deleteIdx > -1 {
+		e.w.entities = append(e.w.entities[:deleteIdx], e.w.entities[deleteIdx+1:]...)
+	}
+
+	for ct, m := range e.w.components {
+		delete(m, e)
+
+		if len(e.w.components[ct]) == 0 {
+			delete(e.w.components, ct)
+		}
+	}
+
+	e.w.systemCacheDeleteEntityFromAllSystems(e)
 }
 
 func (e *entity) Get(c Component) Component {
@@ -48,7 +78,7 @@ func (e *entity) Has(c Component) bool {
 		return false
 	}
 
-	_, ok := cs[e.id]
+	_, ok := cs[e]
 	return ok
 }
 
@@ -58,9 +88,15 @@ func (e *entity) Replace(c Component) {
 
 func (e *entity) Delete(c Component) {
 	ct := reflect.TypeOf(c)
-	delete(e.w.components[ct], e.id)
+	delete(e.w.components[ct], e)
 	if len(e.w.components[ct]) == 0 {
 		delete(e.w.components, ct)
+	}
+
+	e.componentCount--
+	if e.componentCount == 0 {
+		e.Destroy()
+		return
 	}
 
 	e.w.systemCacheRebuildByEntity(e)
@@ -70,7 +106,7 @@ func (e *entity) Components() []Component {
 	var cs []Component
 
 	for _, ec := range e.w.components {
-		cs = append(cs, ec[e.id])
+		cs = append(cs, ec[e])
 	}
 
 	return cs
@@ -84,12 +120,12 @@ func (e *entity) getOrReplace(c Component, replace bool) Component {
 	ct := reflect.TypeOf(c)
 	cs := e.w.components[ct]
 	if cs == nil {
-		cs = make(map[EntityID]Component)
+		cs = make(map[Entity]Component)
 		e.w.components[ct] = cs
 	}
 
 	if !replace {
-		v, ok := cs[e.id]
+		v, ok := cs[e]
 		if ok {
 			return v
 		}
@@ -99,7 +135,13 @@ func (e *entity) getOrReplace(c Component, replace bool) Component {
 		return nil
 	}
 
-	e.w.components[reflect.TypeOf(c)][e.ID()] = c
+	if e.destroyed {
+		e.w.entities = append(e.w.entities, e)
+		e.destroyed = false
+	}
+
+	e.componentCount++
+	e.w.components[reflect.TypeOf(c)][e] = c
 	e.w.systemCacheRebuildByEntity(e)
 	return c
 }
