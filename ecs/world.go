@@ -36,7 +36,6 @@ type world struct {
 	entities []Entity
 
 	components map[componentType]map[EntityID]Component
-	// oneFrameComponents map[componentType]map[EntityID]Component // TODO
 
 	systems                  []System
 	systemFilters            map[systemType][]systemFilterTypes
