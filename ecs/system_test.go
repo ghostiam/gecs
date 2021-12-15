@@ -28,8 +28,8 @@ func TestSystem_Filter(t *testing.T) {
 
 	t.Run("After add entities 1 and 2", func(t *testing.T) {
 		w.Update(1)
-		require.Equal(t, 1, len(s1.Filtered))
-		require.Equal(t, 1, len(s1.Filtered[0]))
+		require.Len(t, s1.Filtered, 1)
+		require.Len(t, s1.Filtered[0], 1)
 		require.Equal(t, e1.ID(), s1.Filtered[0][0].ID())
 	})
 
@@ -37,17 +37,17 @@ func TestSystem_Filter(t *testing.T) {
 		e1.Replace(&Component2{Text: "Ops"})
 
 		w.Update(1)
-		require.Equal(t, 0, len(s1.Filtered))
+		require.Len(t, s1.Filtered, 0)
 	})
 
 	t.Run("After delete exclude component from entity 1", func(t *testing.T) {
 		e1.Delete((*Component2)(nil))
 
 		w.Update(1)
-		require.Equal(t, 1, len(s1.Filtered))
+		require.Len(t, s1.Filtered, 1)
 
 		f0 := s1.Filtered[0]
-		require.Equal(t, 1, len(f0))
+		require.Len(t, f0, 1)
 		require.Equal(t, e1.ID(), f0[0].ID())
 	})
 
@@ -56,10 +56,10 @@ func TestSystem_Filter(t *testing.T) {
 		e2.Replace(&Component1{Num: 1234})
 
 		w.Update(1)
-		require.Equal(t, 1, len(s1.Filtered))
+		require.Len(t, s1.Filtered, 1)
 
 		f0 := s1.Filtered[0]
-		require.Equal(t, 2, len(f0))
+		require.Len(t, f0, 2)
 
 		sort.Slice(f0, func(i, j int) bool {
 			return f0[i].ID() < f0[j].ID()
@@ -75,10 +75,10 @@ func TestSystem_Filter(t *testing.T) {
 
 	t.Run("After add entity 3", func(t *testing.T) {
 		w.Update(1)
-		require.Equal(t, 1, len(s1.Filtered))
+		require.Len(t, s1.Filtered, 1)
 
 		f0 := s1.Filtered[0]
-		require.Equal(t, 3, len(f0))
+		require.Len(t, f0, 3)
 
 		sort.Slice(f0, func(i, j int) bool {
 			return f0[i].ID() < f0[j].ID()
@@ -93,10 +93,10 @@ func TestSystem_Filter(t *testing.T) {
 
 	t.Run("After add Component2 to entity 3", func(t *testing.T) {
 		w.Update(1)
-		require.Equal(t, 1, len(s1.Filtered))
+		require.Len(t, s1.Filtered, 1)
 
 		f0 := s1.Filtered[0]
-		require.Equal(t, 2, len(f0))
+		require.Len(t, f0, 2)
 
 		sort.Slice(f0, func(i, j int) bool {
 			return f0[i].ID() < f0[j].ID()
@@ -112,10 +112,10 @@ func TestSystem_Filter(t *testing.T) {
 	t.Run("Add system 1And2", func(t *testing.T) {
 		w.Update(1)
 
-		require.Equal(t, 1, len(s1n2.Filtered))
+		require.Len(t, s1n2.Filtered, 1)
 
 		f0 := s1n2.Filtered[0]
-		require.Equal(t, 1, len(f0))
+		require.Len(t, f0, 1)
 		require.Equal(t, e3.ID(), f0[0].ID())
 	})
 
@@ -148,15 +148,15 @@ func TestSystem_Filter(t *testing.T) {
 	t.Run("Add system 1Or2", func(t *testing.T) {
 		w.Update(1)
 
-		require.Equal(t, 3, len(s1or2.Filtered))
+		require.Len(t, s1or2.Filtered, 3)
 
 		f0 := s1or2.Filtered[0]
 		f1 := s1or2.Filtered[1]
 		f2 := s1or2.Filtered[2]
 
-		require.Equal(t, 1, len(f0))
-		require.Equal(t, 1, len(f1))
-		require.Equal(t, 1, len(f2))
+		require.Len(t, f0, 1)
+		require.Len(t, f1, 1)
+		require.Len(t, f2, 1)
 
 		require.Equal(t, e1.ID(), f0[0].ID())
 		require.Equal(t, e2.ID(), f1[0].ID())
