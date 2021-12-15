@@ -24,6 +24,9 @@ type Entity interface {
 
 	// Delete удаляет компонент с переданным типом.
 	Delete(c Component)
+
+	// Components возвращает все компоненты entity.
+	Components() []Component
 }
 
 type entity struct {
@@ -61,6 +64,16 @@ func (e *entity) Delete(c Component) {
 	}
 
 	e.w.systemCacheRebuildByEntity(e)
+}
+
+func (e *entity) Components() []Component {
+	var cs []Component
+
+	for _, ec := range e.w.components {
+		cs = append(cs, ec[e.id])
+	}
+
+	return cs
 }
 
 func (e *entity) getOrReplace(c Component, replace bool) Component {

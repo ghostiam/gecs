@@ -133,3 +133,23 @@ func TestComponent_Delete(t *testing.T) {
 	require.Nil(t, e.Get((*Component1)(nil)))
 	require.Nil(t, e.Get((*Component2)(nil)))
 }
+
+func TestComponent_Components(t *testing.T) {
+	w := NewWorld()
+	e := w.NewEntity()
+	c1 := &Component1{Num: 42}
+	e.Replace(c1)
+	c2 := &Component2{Text: "Hello world"}
+	e.Replace(c2)
+
+	cs := e.Components()
+	require.Len(t, cs, 2)
+	require.Equal(t, c1, cs[0])
+	require.Equal(t, c2, cs[1])
+
+	e.Delete((*Component1)(nil))
+
+	cs = e.Components()
+	require.Len(t, cs, 1)
+	require.Equal(t, c2, cs[0])
+}

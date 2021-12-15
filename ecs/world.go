@@ -75,6 +75,14 @@ func (w *world) DestroyEntity(e Entity) {
 	w.systemCacheDeleteEntityFromAllSystems(e)
 }
 
+func (w *world) Entities() []Entity {
+	return w.entities
+}
+
+func (w *world) Systems() []System {
+	return w.systems
+}
+
 func (w *world) AddSystem(s System) {
 	w.RemoveSystem(s)
 
