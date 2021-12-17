@@ -38,16 +38,11 @@ func (w *world) systemCacheDeleteEntityFromAllSystems(e Entity) {
 }
 
 func (w *world) systemCacheDeleteEntityFromSystem(e Entity, systemType reflect.Type, fid filterIndex) {
-	var deleteIdx = -1
 	for i, ee := range w.systemFiltersEntityCache[systemType][fid] {
 		if ee.ID() == e.ID() {
-			deleteIdx = i
+			w.systemFiltersEntityCache[systemType][fid] = append(w.systemFiltersEntityCache[systemType][fid][:i], w.systemFiltersEntityCache[systemType][fid][i+1:]...)
 			break
 		}
-	}
-
-	if deleteIdx > -1 {
-		w.systemFiltersEntityCache[systemType][fid] = append(w.systemFiltersEntityCache[systemType][fid][:deleteIdx], w.systemFiltersEntityCache[systemType][fid][deleteIdx+1:]...)
 	}
 
 	if len(w.systemFiltersEntityCache[systemType][fid]) == 0 {

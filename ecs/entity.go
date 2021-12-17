@@ -45,16 +45,11 @@ func (e *entity) ID() uint64 {
 func (e *entity) Destroy() {
 	e.destroyed = true
 
-	var deleteIdx = -1
 	for i, ee := range e.w.entities {
 		if ee.ID() == e.ID() {
-			deleteIdx = i
+			e.w.entities = append(e.w.entities[:i], e.w.entities[i+1:]...)
 			break
 		}
-	}
-
-	if deleteIdx > -1 {
-		e.w.entities = append(e.w.entities[:deleteIdx], e.w.entities[deleteIdx+1:]...)
 	}
 
 	for ct, m := range e.w.components {

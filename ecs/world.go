@@ -95,17 +95,12 @@ func (w *world) AddSystem(s System) {
 func (w *world) RemoveSystem(s System) {
 	st := reflect.TypeOf(s)
 
-	var deleteIdx = -1
 	for i, ss := range w.systems {
 		sst := reflect.TypeOf(ss)
 		if st == sst {
-			deleteIdx = i
+			w.systems = append(w.systems[:i], w.systems[i+1:]...)
 			break
 		}
-	}
-
-	if deleteIdx > -1 {
-		w.systems = append(w.systems[:deleteIdx], w.systems[deleteIdx+1:]...)
 	}
 
 	delete(w.systemFiltersEntityCache, st)
