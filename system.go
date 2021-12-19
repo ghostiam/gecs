@@ -117,6 +117,7 @@ func (w *world) systemEntityCacheRebuildBySystem(systemType reflect.Type) {
 		return
 	}
 
+filtersLoop:
 	for fid, f := range filter {
 		excludeIDs := make(map[uint64]struct{}) // map[EntityID]struct{}
 		for _, ex := range f.Exclude {
@@ -132,7 +133,7 @@ func (w *world) systemEntityCacheRebuildBySystem(systemType reflect.Type) {
 		includeIDs := make(map[uint64]int) // map[EntityID]count
 		for _, in := range f.Include {
 			if len(w.components[in]) == 0 {
-				return // If there is not at least one component from include, there is no point in further checking.
+				continue filtersLoop // If there is not at least one component from include, there is no point in further checking.
 			}
 
 			for e := range w.components[in] {
