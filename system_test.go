@@ -1,10 +1,10 @@
-package ecs
+package gecs
 
 import (
+	"fmt"
 	"sort"
 	"testing"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/require"
 )
 
@@ -184,8 +184,8 @@ func (s *Component1System) Update(dt float32, filtered [][]Entity) {
 	println("Component1System")
 	for _, f := range filtered {
 		for _, e := range f {
-			spew.Dump(e.ID(), e.Get((*Component1)(nil)))
-			spew.Dump(e.ID(), e.Get((*Component2)(nil)))
+			fmt.Println(e.ID(), e.Get((*Component1)(nil)))
+			fmt.Println(e.ID(), e.Get((*Component2)(nil)))
 		}
 	}
 }
@@ -208,8 +208,8 @@ func (s *Component2System) Update(dt float32, filtered [][]Entity) {
 	println("Component2System")
 	for _, f := range filtered {
 		for _, e := range f {
-			spew.Dump(e.ID(), e.Get((*Component1)(nil)))
-			spew.Dump(e.ID(), e.Get((*Component2)(nil)))
+			fmt.Println(e.ID(), e.Get((*Component1)(nil)))
+			fmt.Println(e.ID(), e.Get((*Component2)(nil)))
 		}
 	}
 }
@@ -232,8 +232,8 @@ func (s *Component1And2System) Update(dt float32, filtered [][]Entity) {
 	println("Component1And2System")
 	for _, f := range filtered {
 		for _, e := range f {
-			spew.Dump(e.ID(), e.Get((*Component1)(nil)))
-			spew.Dump(e.ID(), e.Get((*Component2)(nil)))
+			fmt.Println(e.ID(), e.Get((*Component1)(nil)))
+			fmt.Println(e.ID(), e.Get((*Component2)(nil)))
 		}
 	}
 }
@@ -258,8 +258,8 @@ func (s *Component1Or2System) Update(dt float32, filtered [][]Entity) {
 	println("Component1Or2System")
 	for _, f := range filtered {
 		for _, e := range f {
-			spew.Dump(e.ID(), e.Get((*Component1)(nil)))
-			spew.Dump(e.ID(), e.Get((*Component2)(nil)))
+			fmt.Println(e.ID(), e.Get((*Component1)(nil)))
+			fmt.Println(e.ID(), e.Get((*Component2)(nil)))
 		}
 	}
 }

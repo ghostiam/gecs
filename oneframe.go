@@ -1,4 +1,4 @@
-package ecs
+package gecs
 
 type oneFrame struct {
 	c Component

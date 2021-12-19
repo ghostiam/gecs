@@ -1,4 +1,4 @@
-package ecs
+package gecs
 
 import (
 	"reflect"
@@ -48,7 +48,7 @@ type world struct {
 }
 
 func (w *world) NewEntity() Entity {
-	w.entityID++ // TODO atomic or mutex
+	w.entityID++
 	e := &entity{w: w, id: w.entityID}
 
 	w.entities = append(w.entities, e)
