@@ -178,15 +178,13 @@ func (s *Component1System) GetFilters() []SystemFilter {
 	}
 }
 
-func (s *Component1System) Update(dt float32, filtered [][]Entity) {
+func (s *Component1System) Update(_ float32, filtered [][]Entity) {
 	s.Filtered = filtered
 
 	println("Component1System")
-	for _, f := range filtered {
-		for _, e := range f {
-			fmt.Println(e.ID(), e.Get((*Component1)(nil)))
-			fmt.Println(e.ID(), e.Get((*Component2)(nil)))
-		}
+	for _, e := range filtered[0] {
+		fmt.Println(">", e.ID(), e.Get((*Component1)(nil)))
+		fmt.Println(">", e.ID(), e.Get((*Component2)(nil)))
 	}
 }
 
@@ -202,15 +200,13 @@ func (s *Component2System) GetFilters() []SystemFilter {
 	}
 }
 
-func (s *Component2System) Update(dt float32, filtered [][]Entity) {
+func (s *Component2System) Update(_ float32, filtered [][]Entity) {
 	s.Filtered = filtered
 
 	println("Component2System")
-	for _, f := range filtered {
-		for _, e := range f {
-			fmt.Println(e.ID(), e.Get((*Component1)(nil)))
-			fmt.Println(e.ID(), e.Get((*Component2)(nil)))
-		}
+	for _, e := range filtered[0] {
+		fmt.Println(">", e.ID(), e.Get((*Component1)(nil)))
+		fmt.Println(">", e.ID(), e.Get((*Component2)(nil)))
 	}
 }
 
@@ -226,15 +222,13 @@ func (s *Component1And2System) GetFilters() []SystemFilter {
 	}
 }
 
-func (s *Component1And2System) Update(dt float32, filtered [][]Entity) {
+func (s *Component1And2System) Update(_ float32, filtered [][]Entity) {
 	s.Filtered = filtered
 
 	println("Component1And2System")
-	for _, f := range filtered {
-		for _, e := range f {
-			fmt.Println(e.ID(), e.Get((*Component1)(nil)))
-			fmt.Println(e.ID(), e.Get((*Component2)(nil)))
-		}
+	for _, e := range filtered[0] {
+		fmt.Println(">", e.ID(), e.Get((*Component1)(nil)))
+		fmt.Println(">", e.ID(), e.Get((*Component2)(nil)))
 	}
 }
 
@@ -252,14 +246,15 @@ func (s *Component1Or2System) GetFilters() []SystemFilter {
 	}
 }
 
-func (s *Component1Or2System) Update(dt float32, filtered [][]Entity) {
+func (s *Component1Or2System) Update(_ float32, filtered [][]Entity) {
 	s.Filtered = filtered
 
 	println("Component1Or2System")
-	for _, f := range filtered {
+	for i, f := range filtered {
+		fmt.Println("Filter index: ", i)
 		for _, e := range f {
-			fmt.Println(e.ID(), e.Get((*Component1)(nil)))
-			fmt.Println(e.ID(), e.Get((*Component2)(nil)))
+			fmt.Println(">", e.ID(), e.Get((*Component1)(nil)))
+			fmt.Println(">", e.ID(), e.Get((*Component2)(nil)))
 		}
 	}
 }

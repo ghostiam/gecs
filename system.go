@@ -4,21 +4,23 @@ import (
 	"reflect"
 )
 
-// SystemFilter
-// Include - компоненты которые должны быть на entity.
-// Exclude - компоненты которых не должно быть на entity.
+// SystemFilter contains components for filtering entity when calling System.Update method on the system.
+//    Include - the components that should be on the entity.
+//    Exclude - the components of which should not be on the entity.
 type SystemFilter struct {
 	Include []Component
 	Exclude []Component
 }
 
+// System ecs interface.
 type System interface {
-	// GetFilters возвращает фильтры со списком компонентов.
+	// GetFilters returns filters with a list of components.
 	GetFilters() []SystemFilter
 
-	// Update вызывается при каждом тике.
-	// dt - время в секундах, прошедшее с предыдущего тика.
-	// filtered - отфильтрованный список entity по фильтрам из метода GetFilters.
+	// Update is called on every tick.
+	// dt - time in seconds elapsed from the previous tick.
+	// filtered - filtered entity list by filters from the GetFilters method.
+	// Always contains the same number of elements as the GetFilters method returns, in the same filter order.
 	// filtered - [FilterIndex][EntityIndex]Entity
 	Update(dt float32, filtered [][]Entity)
 }
@@ -121,8 +123,6 @@ func (w *world) systemEntityCacheRebuildBySystem(systemType reflect.Type) {
 	}
 
 	for fid, f := range filter {
-		ffid := filterIndex(fid)
-
 		excludeIDs := make(map[uint64]struct{}) // map[EntityID]struct{}
 		for _, ex := range f.Exclude {
 			if len(w.components[ex]) == 0 {
@@ -151,12 +151,12 @@ func (w *world) systemEntityCacheRebuildBySystem(systemType reflect.Type) {
 					continue
 				}
 
-				// Append if system includes count  == entity component count
+				// Append if system includes count == entity component count
 				if w.systemFiltersEntityCache[systemType] == nil {
 					w.systemFiltersEntityCache[systemType] = make(map[filterIndex][]Entity)
 				}
 
-				w.systemFiltersEntityCache[systemType][ffid] = appendIfMissing(w.systemFiltersEntityCache[systemType][ffid], e)
+				w.systemFiltersEntityCache[systemType][filterIndex(fid)] = appendIfMissing(w.systemFiltersEntityCache[systemType][filterIndex(fid)], e)
 			}
 		}
 	}

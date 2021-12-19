@@ -5,19 +5,22 @@ import (
 	"time"
 )
 
+// World ecs interface.
 type World interface {
 	NewEntity() Entity
 
 	AddSystem(s System)
 	RemoveSystem(s System)
 
+	// Update calls an update on all systems. Takes in the time in seconds since the last call.
 	Update(dt float32)
 
-	// Run вызывает метод Update с частотой TPS (Tick per second). Блокирующий метод!
+	// Run calls the Update method with a TPS (Tick per second) rate. Blocking method!
 	Run(tps uint)
 	Stop()
 }
 
+// NewWorld creates new ecs world instance.
 func NewWorld() World {
 	return &world{
 		entityID:   0,
@@ -53,14 +56,6 @@ func (w *world) NewEntity() Entity {
 
 	w.entities = append(w.entities, e)
 	return e
-}
-
-func (w *world) Entities() []Entity {
-	return w.entities
-}
-
-func (w *world) Systems() []System {
-	return w.systems
 }
 
 func (w *world) AddSystem(s System) {

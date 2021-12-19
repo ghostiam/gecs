@@ -4,30 +4,32 @@ import (
 	"reflect"
 )
 
+// Component ecs interface. Used for better readability.
 type Component interface{}
 
+// Entity ecs interface.
 type Entity interface {
 	ID() uint64
 
-	// Destroy удаляет все компоненты и удаляет entity из мира.
-	// В случае, если кто-то держит ссылку на entity и добавит новый компонент, entity восстановится.
+	// Destroy removes all components and removes the entity from the world.
+	// In case someone holds a reference to the entity and adds a new component, the entity will be restored.
 	Destroy()
 
-	// Get получает существующий компонент с типом переданного компонента.
-	// Если компонента не существует и передан не nil, компонент будет добавлен к entity.
+	// Get gets an existing component with the type of the passed component.
+	// If the component doesn't exist and is not nil passed, the component will be added to entity.
 	Get(c Component) Component
 
-	// Has возвращает true, если существует компонент с переданным типом на entity.
+	// Has returns true if there is a component with the passed type on entity.
 	Has(c Component) bool
 
-	// Replace добавляет компонент к entity, если он не существует или заменяет его, если существует.
-	// Если передан nil тип, ничего не делает.
+	// Replace adds a component to the entity if it doesn't exist, or replaces it if it exists.
+	// If the type is nil, it does nothing.
 	Replace(c Component)
 
-	// Delete удаляет компонент с переданным типом.
+	// Delete removes the component with the passed type.
 	Delete(c Component)
 
-	// Components возвращает все компоненты entity.
+	// Components returns all entity component.
 	Components() []Component
 }
 
