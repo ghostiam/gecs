@@ -164,6 +164,34 @@ func TestSystem_Filter(t *testing.T) {
 		require.Equal(t, e2.ID(), f1[0].ID())
 		require.Equal(t, e3.ID(), f2[0].ID())
 	})
+
+	t.Run("Add system without filter", func(t *testing.T) {
+		s := &WithoutFilterSystem{}
+		w.AddSystem(s)
+
+		w.Update(1)
+
+		require.Len(t, s.Filtered, 0)
+	})
+
+	t.Run("Add system with empty filter", func(t *testing.T) {
+		s := &WithEmptyFilterSystem{}
+		w.AddSystem(s)
+
+		w.Update(1)
+
+		require.Len(t, s.Filtered, 0)
+	})
+
+	t.Run("Add system with nil filter", func(t *testing.T) {
+		s := &WithNilFilterSystem{}
+		w.AddSystem(s)
+
+		w.Update(1)
+
+		require.Len(t, s.Filtered, 1)
+		require.Len(t, s.Filtered[0], 0)
+	})
 }
 
 var _ System = (*Component1System)(nil)
@@ -257,4 +285,48 @@ func (s *Component1Or2System) Update(_ float32, filtered [][]Entity) {
 			fmt.Println(">", e.ID(), e.Get((*Component2)(nil)))
 		}
 	}
+}
+
+var _ System = (*WithoutFilterSystem)(nil)
+
+type WithoutFilterSystem struct {
+	Filtered [][]Entity
+}
+
+func (s *WithoutFilterSystem) GetFilters() []SystemFilter {
+	return nil
+}
+
+func (s *WithoutFilterSystem) Update(_ float32, filtered [][]Entity) {
+	s.Filtered = filtered
+}
+
+var _ System = (*WithEmptyFilterSystem)(nil)
+
+type WithEmptyFilterSystem struct {
+	Filtered [][]Entity
+}
+
+func (s *WithEmptyFilterSystem) GetFilters() []SystemFilter {
+	return []SystemFilter{}
+}
+
+func (s *WithEmptyFilterSystem) Update(_ float32, filtered [][]Entity) {
+	s.Filtered = filtered
+}
+
+var _ System = (*WithNilFilterSystem)(nil)
+
+type WithNilFilterSystem struct {
+	Filtered [][]Entity
+}
+
+func (s *WithNilFilterSystem) GetFilters() []SystemFilter {
+	return []SystemFilter{
+		{Include: nil, Exclude: nil},
+	}
+}
+
+func (s *WithNilFilterSystem) Update(_ float32, filtered [][]Entity) {
+	s.Filtered = filtered
 }
