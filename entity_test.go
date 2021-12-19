@@ -14,11 +14,7 @@ type Component2 struct {
 	Text string
 }
 
-type OneFrameComponent struct {
-	Event string
-}
-
-func TestComponent_Get(t *testing.T) {
+func TestEntity_Get(t *testing.T) {
 	w := NewWorld()
 
 	t.Run("Get nil component", func(t *testing.T) {
@@ -52,7 +48,7 @@ func TestComponent_Get(t *testing.T) {
 	})
 }
 
-func TestComponent_Has(t *testing.T) {
+func TestEntity_Has(t *testing.T) {
 	w := NewWorld()
 	e := w.NewEntity()
 	e.Get(&Component1{Num: 42})
@@ -78,7 +74,7 @@ func TestComponent_Has(t *testing.T) {
 	})
 }
 
-func TestComponent_Replace(t *testing.T) {
+func TestEntity_Replace(t *testing.T) {
 	w := NewWorld()
 	e := w.NewEntity()
 	e.Get(&Component1{Num: 42})
@@ -119,7 +115,7 @@ func TestComponent_Replace(t *testing.T) {
 	})
 }
 
-func TestComponent_Delete(t *testing.T) {
+func TestEntity_Delete(t *testing.T) {
 	w := NewWorld()
 	e := w.NewEntity()
 	e.Replace(&Component1{Num: 42})
@@ -141,7 +137,7 @@ func TestComponent_Delete(t *testing.T) {
 	require.False(t, e.(*entity).destroyed)
 }
 
-func TestComponent_Components(t *testing.T) {
+func TestEntity_Components(t *testing.T) {
 	w := NewWorld()
 	e := w.NewEntity()
 	c1 := &Component1{Num: 42}

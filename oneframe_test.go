@@ -6,16 +6,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type OneFrameComponent struct {
+	Event string
+}
+
 func TestSystem_NewOneFrame(t *testing.T) {
 	w := NewWorld()
-	w.AddSystem(NewOneFrame((*Component1)(nil)))
+	w.AddSystem(NewOneFrame((*OneFrameComponent)(nil)))
 
 	e := w.NewEntity()
-	e.Replace(&Component1{Num: 42})
+	e.Replace(&OneFrameComponent{Event: "EventName"})
 
-	require.True(t, e.Has((*Component1)(nil)))
+	require.True(t, e.Has((*OneFrameComponent)(nil)))
 
 	w.Update(0.1)
 
-	require.False(t, e.Has((*Component1)(nil)))
+	require.False(t, e.Has((*OneFrameComponent)(nil)))
 }
