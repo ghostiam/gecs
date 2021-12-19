@@ -67,11 +67,6 @@ func (w *world) systemCacheRebuildByEntity(e Entity) {
 		componentTypes = append(componentTypes, ct)
 	}
 
-	if len(componentTypes) == 0 {
-		w.systemCacheDeleteEntityFromAllSystems(e)
-		return
-	}
-
 	hasComponentCount := func(ts []reflect.Type) int {
 		found := 0
 
