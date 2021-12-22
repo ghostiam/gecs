@@ -111,10 +111,8 @@ func (w *world) systemCacheRebuildByEntity(e Entity) {
 		}
 
 		for fid, f := range filter {
-			ffid := filterIndex(fid)
-
 			if hasComponentCount(f.Exclude) > 0 {
-				w.systemCacheDeleteEntityFromSystem(e, st, ffid)
+				w.systemCacheDeleteEntityFromSystem(e, st, fid)
 				continue
 			}
 
@@ -123,11 +121,11 @@ func (w *world) systemCacheRebuildByEntity(e Entity) {
 					w.systemFiltersEntityCache[st] = make(map[filterIndex][]Entity)
 				}
 
-				w.systemFiltersEntityCache[st][ffid] = appendIfMissing(w.systemFiltersEntityCache[st][ffid], e)
+				w.systemFiltersEntityCache[st][fid] = appendIfMissing(w.systemFiltersEntityCache[st][fid], e)
 				continue
 			}
 
-			w.systemCacheDeleteEntityFromSystem(e, st, ffid)
+			w.systemCacheDeleteEntityFromSystem(e, st, fid)
 		}
 	}
 }
@@ -138,7 +136,6 @@ func (w *world) systemEntityCacheRebuildBySystem(systemType reflect.Type) {
 		return
 	}
 
-filtersLoop:
 	for fid, f := range filter {
 		excludeIDs := make(map[uint64]struct{}) // map[EntityID]struct{}
 		for _, ex := range f.Exclude {
@@ -154,7 +151,8 @@ filtersLoop:
 		includeIDs := make(map[uint64]int) // map[EntityID]count
 		for _, in := range f.Include {
 			if len(w.components[in]) == 0 {
-				continue filtersLoop // If there is not at least one component from include, there is no point in further checking.
+				// TODO add coverage
+				break // If there is not at least one component from include, there is no point in further checking.
 			}
 
 			for e := range w.components[in] {
@@ -173,7 +171,7 @@ filtersLoop:
 					w.systemFiltersEntityCache[systemType] = make(map[filterIndex][]Entity)
 				}
 
-				w.systemFiltersEntityCache[systemType][filterIndex(fid)] = appendIfMissing(w.systemFiltersEntityCache[systemType][filterIndex(fid)], e)
+				w.systemFiltersEntityCache[systemType][fid] = appendIfMissing(w.systemFiltersEntityCache[systemType][fid], e)
 			}
 		}
 	}

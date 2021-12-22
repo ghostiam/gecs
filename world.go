@@ -37,20 +37,22 @@ func NewWorld() World {
 }
 
 // Type aliases for better readability.
-type componentType reflect.Type
-type systemType reflect.Type
-type filterIndex int
+type componentType = reflect.Type
+type systemType = reflect.Type
+type filterIndex = int
 
 type world struct {
-	entityID  uint64
-	entities  []Entity
-	isRunning bool
+	entityID uint64
+	entities []Entity
 
 	components map[componentType]map[Entity]Component
 
 	systems                  []System
 	systemFilters            map[systemType][]systemFilterTypes
 	systemFiltersEntityCache map[systemType]map[filterIndex][]Entity
+
+	isRunning bool
+	ticker    *time.Ticker
 }
 
 func (w *world) NewEntity() Entity {
@@ -131,7 +133,7 @@ func (w *world) SystemsUpdate(delta time.Duration) {
 		for fid := range w.systemFilters[st] {
 			var entities []Entity
 			if len(w.systemFiltersEntityCache[st]) > 0 {
-				entities = w.systemFiltersEntityCache[st][filterIndex(fid)]
+				entities = w.systemFiltersEntityCache[st][fid]
 			}
 			filteredEntities = append(filteredEntities, entities)
 		}
@@ -159,6 +161,11 @@ func (w *world) Run(fps uint) error {
 
 	w.isRunning = true
 
+	if fps > 0 {
+		delay := time.Second / time.Duration(fps)
+		w.ticker = time.NewTicker(delay)
+	}
+
 	last := time.Now()
 	for w.isRunning {
 		delta := time.Since(last)
@@ -169,9 +176,7 @@ func (w *world) Run(fps uint) error {
 			continue
 		}
 
-		sinceAfterUpdate := time.Since(last)
-		delay := time.Duration(float64(time.Second)/float64(fps)) - sinceAfterUpdate
-		time.Sleep(delay)
+		<-w.ticker.C
 	}
 
 	w.SystemsDestroy()
@@ -180,4 +185,8 @@ func (w *world) Run(fps uint) error {
 
 func (w *world) Stop() {
 	w.isRunning = false
+
+	if w.ticker != nil {
+		w.ticker.Stop()
+	}
 }
