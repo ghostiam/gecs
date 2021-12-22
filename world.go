@@ -1,6 +1,7 @@
 package gecs
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"time"
@@ -33,6 +34,8 @@ func NewWorld() World {
 		systems:                  nil,
 		systemFilters:            make(map[systemType][]systemFilterTypes),
 		systemFiltersEntityCache: make(map[systemType]map[filterIndex][]Entity),
+
+		done: make(chan struct{}, 1),
 	}
 }
 
@@ -51,8 +54,8 @@ type world struct {
 	systemFilters            map[systemType][]systemFilterTypes
 	systemFiltersEntityCache map[systemType]map[filterIndex][]Entity
 
-	isRunning bool
-	ticker    *time.Ticker
+	done   chan struct{}
+	ticker *time.Ticker
 }
 
 func (w *world) NewEntity() Entity {
@@ -154,29 +157,32 @@ func (w *world) SystemsDestroy() {
 }
 
 func (w *world) Run(fps uint) error {
+	if fps == 0 {
+		return errors.New("fps must be greater than 0")
+	}
+
 	err := w.SystemsInit()
 	if err != nil {
 		return err
 	}
 
-	w.isRunning = true
-
-	if fps > 0 {
-		delay := time.Second / time.Duration(fps)
-		w.ticker = time.NewTicker(delay)
-	}
+	delay := time.Second / time.Duration(fps)
+	w.ticker = time.NewTicker(delay)
 
 	last := time.Now()
-	for w.isRunning {
+
+loop:
+	for {
 		delta := time.Since(last)
 		last = time.Now()
 		w.SystemsUpdate(delta)
 
-		if fps == 0 {
+		select {
+		case <-w.ticker.C:
 			continue
+		case <-w.done:
+			break loop
 		}
-
-		<-w.ticker.C
 	}
 
 	w.SystemsDestroy()
@@ -184,9 +190,9 @@ func (w *world) Run(fps uint) error {
 }
 
 func (w *world) Stop() {
-	w.isRunning = false
-
 	if w.ticker != nil {
 		w.ticker.Stop()
 	}
+
+	w.done <- struct{}{}
 }
