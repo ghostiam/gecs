@@ -147,7 +147,7 @@ func TestEntity_Components(t *testing.T) {
 
 	cs := e.Components()
 	require.Len(t, cs, 2)
-	require.EqualValues(t, []Component{c1, c2}, cs)
+	require.ElementsMatch(t, []Component{c1, c2}, cs)
 
 	e.Delete((*Component1)(nil))
 
