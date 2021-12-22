@@ -85,6 +85,12 @@ func (e *entity) Replace(c Component) {
 
 func (e *entity) Delete(c Component) {
 	ct := reflect.TypeOf(c)
+
+	_, ok := e.w.components[ct][e]
+	if !ok {
+		return
+	}
+
 	delete(e.w.components[ct], e)
 	if len(e.w.components[ct]) == 0 {
 		delete(e.w.components, ct)

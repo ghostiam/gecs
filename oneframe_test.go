@@ -2,6 +2,7 @@ package gecs
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -19,7 +20,7 @@ func TestSystem_NewOneFrame(t *testing.T) {
 
 	require.True(t, e.Has((*OneFrameComponent)(nil)))
 
-	w.Update(0.1)
+	w.SystemsUpdate(time.Second)
 
 	require.False(t, e.Has((*OneFrameComponent)(nil)))
 }

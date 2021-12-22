@@ -1,6 +1,7 @@
 package gecs
 
 import (
+	"fmt"
 	"reflect"
 	"time"
 )
@@ -12,11 +13,13 @@ type World interface {
 	AddSystem(s System)
 	RemoveSystem(s System)
 
-	// Update calls an update on all systems. Takes in the time in seconds since the last call.
-	Update(dt float32)
+	SystemsInit() error
+	// SystemsUpdate calls an update on all systems. Takes in the time elapsed from the previous call.
+	SystemsUpdate(delta time.Duration)
+	SystemsDestroy()
 
 	// Run calls the Update method with a TPS (Tick per second) rate. Blocking method!
-	Run(tps uint)
+	Run(tps uint) error
 	Stop()
 }
 
@@ -102,7 +105,25 @@ func (w *world) RemoveSystem(s System) {
 	delete(w.systemFilters, st)
 }
 
-func (w *world) Update(dt float32) {
+func (w *world) SystemsInit() error {
+	for _, s := range w.systems {
+		ss, ok := s.(SystemIniter)
+		if !ok {
+			continue
+		}
+
+		err := ss.Init()
+		if err != nil {
+			st := reflect.TypeOf(s)
+
+			return fmt.Errorf("%s: %w", st.String(), err)
+		}
+	}
+
+	return nil
+}
+
+func (w *world) SystemsUpdate(delta time.Duration) {
 	for _, s := range w.systems {
 		st := reflect.TypeOf(s)
 
@@ -115,21 +136,46 @@ func (w *world) Update(dt float32) {
 			filteredEntities = append(filteredEntities, entities)
 		}
 
-		s.Update(dt, filteredEntities)
+		s.Update(delta, filteredEntities)
 	}
 }
 
-func (w *world) Run(fps uint) {
+func (w *world) SystemsDestroy() {
+	for _, s := range w.systems {
+		ss, ok := s.(SystemDestroyer)
+		if !ok {
+			continue
+		}
+
+		ss.Destroy()
+	}
+}
+
+func (w *world) Run(fps uint) error {
+	err := w.SystemsInit()
+	if err != nil {
+		return err
+	}
+
 	w.isRunning = true
 
 	last := time.Now()
 	for w.isRunning {
-		dt := time.Since(last)
-		w.Update(float32(dt.Seconds()))
+		delta := time.Since(last)
 		last = time.Now()
+		w.SystemsUpdate(delta)
 
-		time.Sleep(time.Duration(float64(time.Second) / float64(fps)))
+		if fps == 0 {
+			continue
+		}
+
+		sinceAfterUpdate := time.Since(last)
+		delay := time.Duration(float64(time.Second)/float64(fps)) - sinceAfterUpdate
+		time.Sleep(delay)
 	}
+
+	w.SystemsDestroy()
+	return nil
 }
 
 func (w *world) Stop() {

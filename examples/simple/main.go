@@ -49,7 +49,7 @@ func (s *RandomMoveSystem) GetFilters() []gecs.SystemFilter {
 	}
 }
 
-func (s *RandomMoveSystem) Update(_ float32, filtered [][]gecs.Entity) {
+func (s *RandomMoveSystem) Update(_ time.Duration, filtered [][]gecs.Entity) {
 	positions := filtered[0]
 
 	for _, p := range positions {
@@ -85,7 +85,7 @@ func (s *TextRenderSystem) GetFilters() []gecs.SystemFilter {
 	}
 }
 
-func (s *TextRenderSystem) Update(_ float32, filtered [][]gecs.Entity) {
+func (s *TextRenderSystem) Update(_ time.Duration, filtered [][]gecs.Entity) {
 	width, height := s.Width, s.Height
 	hasBorder := s.BorderChar != rune(0)
 	if hasBorder {

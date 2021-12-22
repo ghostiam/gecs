@@ -2,6 +2,7 @@ package gecs
 
 import (
 	"reflect"
+	"time"
 )
 
 // SystemFilter contains components for filtering entity when calling System.Update method on the system.
@@ -12,17 +13,37 @@ type SystemFilter struct {
 	Exclude []Component
 }
 
+// SystemIniter ecs interface.
+type SystemIniter interface {
+	System
+
+	Init() error
+}
+
 // System ecs interface.
 type System interface {
 	// GetFilters returns filters with a list of components.
 	GetFilters() []SystemFilter
 
 	// Update is called on every tick.
-	// dt - time in seconds elapsed from the previous tick.
+	// delta - time elapsed from the previous tick.
 	// filtered - filtered entity list by filters from the GetFilters method.
 	// Always contains the same number of elements as the GetFilters method returns, in the same filter order.
 	// filtered - [FilterIndex][EntityIndex]Entity
-	Update(dt float32, filtered [][]Entity)
+	Update(delta time.Duration, filtered [][]Entity)
+}
+
+// SystemDestroyer ecs interface.
+type SystemDestroyer interface {
+	System
+
+	Destroy()
+}
+
+// SystemFull ecs interface.
+type SystemFull interface {
+	SystemIniter
+	SystemDestroyer
 }
 
 // systemFilterTypes includes Component types

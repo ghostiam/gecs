@@ -1,5 +1,9 @@
 package gecs
 
+import (
+	"time"
+)
+
 type oneFrame struct {
 	c Component
 }
@@ -19,7 +23,7 @@ func (s *oneFrame) GetFilters() []SystemFilter {
 	return []SystemFilter{{Include: []Component{s.c}}}
 }
 
-func (s *oneFrame) Update(_ float32, filtered [][]Entity) {
+func (s *oneFrame) Update(_ time.Duration, filtered [][]Entity) {
 	for _, es := range filtered {
 		for _, e := range es {
 			e.Delete(s.c)

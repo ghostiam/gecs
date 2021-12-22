@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -15,7 +16,7 @@ func TestSystem_Filter(t *testing.T) {
 	w.AddSystem(s1)
 
 	t.Run("First nil check", func(t *testing.T) {
-		w.Update(1)
+		w.SystemsUpdate(time.Second)
 		require.Len(t, s1.Filtered, 1)
 		require.Len(t, s1.Filtered[0], 0)
 	})
@@ -28,7 +29,7 @@ func TestSystem_Filter(t *testing.T) {
 	e2.Replace(&Component2{Text: "Hello world"})
 
 	t.Run("After add entities 1 and 2", func(t *testing.T) {
-		w.Update(1)
+		w.SystemsUpdate(time.Second)
 		require.Len(t, s1.Filtered, 1)
 		require.Len(t, s1.Filtered[0], 1)
 		require.Equal(t, e1.ID(), s1.Filtered[0][0].ID())
@@ -37,7 +38,7 @@ func TestSystem_Filter(t *testing.T) {
 	t.Run("Add exclude component to entity 1", func(t *testing.T) {
 		e1.Replace(&Component2{Text: "Ops"})
 
-		w.Update(1)
+		w.SystemsUpdate(time.Second)
 		require.Len(t, s1.Filtered, 1)
 		require.Len(t, s1.Filtered[0], 0)
 	})
@@ -45,7 +46,7 @@ func TestSystem_Filter(t *testing.T) {
 	t.Run("After delete exclude component from entity 1", func(t *testing.T) {
 		e1.Delete((*Component2)(nil))
 
-		w.Update(1)
+		w.SystemsUpdate(time.Second)
 		require.Len(t, s1.Filtered, 1)
 
 		f0 := s1.Filtered[0]
@@ -57,7 +58,7 @@ func TestSystem_Filter(t *testing.T) {
 		e2.Delete((*Component2)(nil))
 		e2.Replace(&Component1{Num: 1234})
 
-		w.Update(1)
+		w.SystemsUpdate(time.Second)
 		require.Len(t, s1.Filtered, 1)
 
 		f0 := s1.Filtered[0]
@@ -76,7 +77,7 @@ func TestSystem_Filter(t *testing.T) {
 	e3.Replace(&Component1{Num: 3333})
 
 	t.Run("After add entity 3", func(t *testing.T) {
-		w.Update(1)
+		w.SystemsUpdate(time.Second)
 		require.Len(t, s1.Filtered, 1)
 
 		f0 := s1.Filtered[0]
@@ -94,7 +95,7 @@ func TestSystem_Filter(t *testing.T) {
 	e3.Replace(&Component2{Text: "Hello world"})
 
 	t.Run("After add Component2 to entity 3", func(t *testing.T) {
-		w.Update(1)
+		w.SystemsUpdate(time.Second)
 		require.Len(t, s1.Filtered, 1)
 
 		f0 := s1.Filtered[0]
@@ -112,7 +113,7 @@ func TestSystem_Filter(t *testing.T) {
 	w.AddSystem(s1n2)
 
 	t.Run("Add system 1And2", func(t *testing.T) {
-		w.Update(1)
+		w.SystemsUpdate(time.Second)
 
 		require.Len(t, s1n2.Filtered, 1)
 
@@ -122,7 +123,7 @@ func TestSystem_Filter(t *testing.T) {
 	})
 
 	t.Run("Before delete systems", func(t *testing.T) {
-		w.Update(1)
+		w.SystemsUpdate(time.Second)
 
 		require.Len(t, w.(*world).systems, 2)
 		require.Len(t, w.(*world).systemFiltersEntityCache, 2)
@@ -133,7 +134,7 @@ func TestSystem_Filter(t *testing.T) {
 	w.RemoveSystem((*Component1And2System)(nil))
 
 	t.Run("After delete systems", func(t *testing.T) {
-		w.Update(1)
+		w.SystemsUpdate(time.Second)
 
 		require.Len(t, w.(*world).systems, 0)
 		require.Len(t, w.(*world).systemFiltersEntityCache, 0)
@@ -148,7 +149,7 @@ func TestSystem_Filter(t *testing.T) {
 	e2.Replace(&Component2{Text: "Hello world"})
 
 	t.Run("Add system 1Or2", func(t *testing.T) {
-		w.Update(1)
+		w.SystemsUpdate(time.Second)
 
 		require.Len(t, s1or2.Filtered, 3)
 
@@ -169,7 +170,7 @@ func TestSystem_Filter(t *testing.T) {
 		s := &WithoutFilterSystem{}
 		w.AddSystem(s)
 
-		w.Update(1)
+		w.SystemsUpdate(time.Second)
 
 		require.Len(t, s.Filtered, 0)
 	})
@@ -178,7 +179,7 @@ func TestSystem_Filter(t *testing.T) {
 		s := &WithEmptyFilterSystem{}
 		w.AddSystem(s)
 
-		w.Update(1)
+		w.SystemsUpdate(time.Second)
 
 		require.Len(t, s.Filtered, 0)
 	})
@@ -187,10 +188,17 @@ func TestSystem_Filter(t *testing.T) {
 		s := &WithNilFilterSystem{}
 		w.AddSystem(s)
 
-		w.Update(1)
+		w.SystemsUpdate(time.Second)
 
 		require.Len(t, s.Filtered, 1)
 		require.Len(t, s.Filtered[0], 0)
+	})
+
+	t.Run("Bug fix system cache rebuild if one include components is zero", func(t *testing.T) {
+		// TODO add test
+		// Если добавить систему, после создания entity, но при этом есть 2 фильтра и в первом указан компонент,
+		// которого сейчас нет в мире, а во втором, который есть, но он уже не попадал в кеш, так как был return,
+		// вместо continue.
 	})
 }
 
@@ -206,7 +214,7 @@ func (s *Component1System) GetFilters() []SystemFilter {
 	}
 }
 
-func (s *Component1System) Update(_ float32, filtered [][]Entity) {
+func (s *Component1System) Update(_ time.Duration, filtered [][]Entity) {
 	s.Filtered = filtered
 
 	println("Component1System")
@@ -228,7 +236,7 @@ func (s *Component2System) GetFilters() []SystemFilter {
 	}
 }
 
-func (s *Component2System) Update(_ float32, filtered [][]Entity) {
+func (s *Component2System) Update(_ time.Duration, filtered [][]Entity) {
 	s.Filtered = filtered
 
 	println("Component2System")
@@ -250,7 +258,7 @@ func (s *Component1And2System) GetFilters() []SystemFilter {
 	}
 }
 
-func (s *Component1And2System) Update(_ float32, filtered [][]Entity) {
+func (s *Component1And2System) Update(_ time.Duration, filtered [][]Entity) {
 	s.Filtered = filtered
 
 	println("Component1And2System")
@@ -274,7 +282,7 @@ func (s *Component1Or2System) GetFilters() []SystemFilter {
 	}
 }
 
-func (s *Component1Or2System) Update(_ float32, filtered [][]Entity) {
+func (s *Component1Or2System) Update(_ time.Duration, filtered [][]Entity) {
 	s.Filtered = filtered
 
 	println("Component1Or2System")
@@ -297,7 +305,7 @@ func (s *WithoutFilterSystem) GetFilters() []SystemFilter {
 	return nil
 }
 
-func (s *WithoutFilterSystem) Update(_ float32, filtered [][]Entity) {
+func (s *WithoutFilterSystem) Update(_ time.Duration, filtered [][]Entity) {
 	s.Filtered = filtered
 }
 
@@ -311,7 +319,7 @@ func (s *WithEmptyFilterSystem) GetFilters() []SystemFilter {
 	return []SystemFilter{}
 }
 
-func (s *WithEmptyFilterSystem) Update(_ float32, filtered [][]Entity) {
+func (s *WithEmptyFilterSystem) Update(_ time.Duration, filtered [][]Entity) {
 	s.Filtered = filtered
 }
 
@@ -327,6 +335,6 @@ func (s *WithNilFilterSystem) GetFilters() []SystemFilter {
 	}
 }
 
-func (s *WithNilFilterSystem) Update(_ float32, filtered [][]Entity) {
+func (s *WithNilFilterSystem) Update(_ time.Duration, filtered [][]Entity) {
 	s.Filtered = filtered
 }
