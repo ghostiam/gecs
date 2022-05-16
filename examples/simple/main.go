@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"strings"
 	"time"
@@ -26,7 +27,10 @@ func main() {
 		e.Get(&TextRender{Char: rune('a' + i)})
 	}
 
-	w.Run(1)
+	err := w.Run(1)
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
 
 type Position struct {
